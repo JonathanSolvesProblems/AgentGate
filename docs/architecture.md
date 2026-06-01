@@ -28,9 +28,10 @@
 │                     Cloud target: Cisco Deep Time Series Model       │
 │                                                                      │
 │   4. reasoning      Foundation-Sec-8B (Splunk hosted, or Ollama      │
-│                     local). Only invoked when prior severity ≥       │
-│                     medium. Output is a paragraph naming the         │
-│                     concrete risk in human language.                 │
+│                     local). ADVISORY — it does NOT gate decisions.   │
+│                     Only invoked when prior severity ≥ medium. Its   │
+│                     paragraph attaches to the Finding so a human     │
+│                     reviewer reads the risk in plain English.        │
 │                                                                      │
 │   5. policy         Deterministic rule engine over the 12-policy     │
 │                     library mapped to NIST AI RMF, OWASP LLM Top 10, │
@@ -103,17 +104,28 @@ Generative output never gates a decision. It informs the analyst who will.
 
 ## Performance (measured)
 
+### Decision path (every gate decision)
+
 | Metric | Value | Test |
 |---|---|---|
-| Injection precision | 1.000 (22 positives) | `tests/test_injection.py` |
-| Injection recall | 1.000 (22 positives) | `tests/test_injection.py` |
+| Injection precision (in-scope) | 1.000 (35 positives, AgentDojo + adversarial) | `tests/test_injection.py` |
+| Injection recall (in-scope) | 0.971 (34/35, leet bypass xfail) | `tests/test_injection.py` |
 | Injection specificity | 1.000 (26 negatives) | `tests/test_injection.py` |
+| Out-of-scope passthrough | 8/8 (INJECAGENT-style tool hijacking) | `tests/test_injection.py` |
 | Policy-gate FPR | 0.000 (20 benign tool calls) | `tests/test_pipeline.py` |
-| Pipeline p50 latency | 0.22 ms | `tests/test_pipeline.py` |
-| Pipeline p95 latency | 0.33 ms | `tests/test_pipeline.py` |
-| Foundation-Sec inference | ~30 tok/s on RTX 5060 | `scripts/smoke_test_ollama.py` |
+| Deterministic p50 latency | 0.23 ms | `tests/test_latency.py` |
+| Deterministic p95 latency | 0.56 ms | `tests/test_latency.py` |
 
-Latency excludes the reasoning stage, which only runs on non-trivial severity and adds 5–40s depending on token count.
+### Reasoning path (advisory, attached to Finding)
+
+| Metric | Value | Test |
+|---|---|---|
+| Foundation-Sec mean | 9.4 s | `tests/test_latency.py --runslow` |
+| Foundation-Sec p50 | 8.2 s | `tests/test_latency.py --runslow` |
+| Foundation-Sec max | 13.1 s | `tests/test_latency.py --runslow` |
+| Inference throughput | ~30 tok/s on RTX 5060 8 GiB | `scripts/smoke_test_ollama.py` |
+
+The reasoning stage is **advisory**, not gate-deciding. Its output explains the Finding to a human reviewer; the BLOCK / REQUIRE_APPROVAL / ALLOW verdict is produced entirely by the deterministic policy engine. This separation means the latency that matters for the gate decision is sub-millisecond, while the slower semantic explanation runs in parallel with the analyst's notification.
 
 ## Production path
 

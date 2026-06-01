@@ -21,7 +21,7 @@ from typing import Any, Iterable
 import networkx as nx
 from rich.console import Console
 
-from .splunk_client import get_service
+from .splunk_client import get_service, rest
 
 console = Console()
 
@@ -170,30 +170,39 @@ def _wire_search_to_asset_coverage(g: nx.DiGraph) -> None:
 
 
 def build_graph() -> GraphArtifact:
-    """Walk Splunk via SDK to pull saved searches + assets, then build the graph.
+    """Walk Splunk via REST to pull saved searches + assets, then build the graph.
 
-    Iterates saved_searches FIRST because accessing other Collections (kvstore, indexes)
-    mutates the SDK's internal namespace and a subsequent saved_searches iteration
-    returns only 1 entry (SDK quirk in 2.x).
+    Uses the stateless REST helper rather than the SDK Collection iteration
+    because the SDK mutates internal namespace state when crossing endpoints
+    (saved_searches → kvstore → saved_searches), producing flaky cross-test
+    results. REST is order-independent and deterministic.
     """
-    service = get_service()
     g = nx.DiGraph()
 
-    # 1) Saved searches first. Default iteration returns the full small set we have.
+    # 1) Saved searches via REST, count=0 means all.
     search_names: list[str] = []
-    for s in service.saved_searches:
-        if not s.name.startswith("AG:"):
+    r = rest("GET", "/services/saved/searches", params={"count": "0"})
+    r.raise_for_status()
+    for entry in r.json().get("entry", []):
+        name = entry["name"]
+        if not name.startswith("AG:"):
             continue
+        content = entry.get("content", {})
         spec = {
-            "search": s.content.get("search", ""),
-            "description": s.content.get("description", ""),
-            "cron_schedule": s.content.get("cron_schedule", ""),
+            "search": content.get("search", ""),
+            "description": content.get("description", ""),
+            "cron_schedule": content.get("cron_schedule", ""),
         }
-        _add_search_node(g, s.name, spec)
-        search_names.append(s.name)
+        _add_search_node(g, name, spec)
+        search_names.append(name)
 
-    # 2) Assets. Safe to touch kvstore now that saved_searches is fully read.
-    assets_raw = list(service.kvstore["agentgate_assets"].data.query())
+    # 2) Assets via REST. The KV store query endpoint returns plain JSON.
+    r = rest("GET", "/servicesNS/nobody/search/storage/collections/data/agentgate_assets")
+    if r.status_code == 200:
+        assets_raw = r.json() if r.text else []
+    else:
+        # Fallback to the SDK only if REST fails (last resort).
+        assets_raw = list(get_service().kvstore["agentgate_assets"].data.query())
     assets: list[dict[str, Any]] = []
     for raw in assets_raw:
         a = dict(raw)

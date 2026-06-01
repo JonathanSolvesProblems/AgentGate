@@ -77,10 +77,30 @@ def scenario_happy_path() -> ToolCall:
     )
 
 
+def scenario_require_approval() -> ToolCall:
+    """An expensive multi-week, cross-index SPL with no early filter. Predictable
+    cost crosses the SVC threshold (POL-007) and cross-index reach trips POL-012,
+    so the gate routes to REQUIRE_APPROVAL and drafts a Finding for the analyst
+    rather than blocking outright. Proves the pipeline is not just `return BLOCK`."""
+    return ToolCall(
+        agent_id="retention-audit-bot",
+        tool_name="splunk_run_query",
+        arguments={
+            "query": (
+                "search index=agentgate_demo_data OR index=agentgate_audit OR "
+                "index=main OR index=history OR index=summary OR index=lastchance "
+                "earliest=-30d latest=now | stats count by sourcetype index"
+            ),
+        },
+        raw_user_prompt="Pull a 30-day retention audit across every index for the compliance team.",
+    )
+
+
 SCENARIOS = {
-    "friendly": ("Friendly fire", scenario_friendly_fire),
-    "injection": ("Prompt injection", scenario_prompt_injection),
-    "happy": ("Happy path", scenario_happy_path),
+    "friendly": ("Friendly fire (BLOCK)", scenario_friendly_fire),
+    "injection": ("Prompt injection (BLOCK)", scenario_prompt_injection),
+    "approval": ("Requires approval (REQUIRE_APPROVAL -> Finding)", scenario_require_approval),
+    "happy": ("Happy path (ALLOW)", scenario_happy_path),
 }
 
 DECISION_STYLE = {

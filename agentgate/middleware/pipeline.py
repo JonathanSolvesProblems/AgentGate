@@ -1,9 +1,16 @@
-"""The orchestrator: runs the six-stage pipeline and synthesises a GateVerdict.
+"""The orchestrator: runs the pipeline and synthesises a GateVerdict.
 
-Stage 6 = synthesis. Decision rule:
-- any BLOCK from policy stage   → BLOCK
-- any REQUIRE_APPROVAL          → REQUIRE_APPROVAL  (a Finding is drafted)
-- everything passes             → ALLOW
+The decision is 100% deterministic and driven by the policy stage. The
+reasoning stage (Foundation-Sec) is ADVISORY — its paragraph attaches to the
+Finding so a human reviewer reads the risk in plain English, but it does not
+gate the verdict. This keeps the gate decision reproducible from the policy
+library alone (a property compliance auditors demand) while still giving
+analysts semantic context.
+
+Decision rule (policy-stage output only):
+- BLOCK from policy stage         → BLOCK
+- REQUIRE_APPROVAL from policy    → REQUIRE_APPROVAL  (a Finding is drafted)
+- everything passes               → ALLOW
 """
 
 from __future__ import annotations
