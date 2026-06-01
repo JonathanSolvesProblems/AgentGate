@@ -1,0 +1,15 @@
+[]
+access = read : [ * ], write : [ admin ]
+export = system
+
+[views]
+export = system
+
+[collections/agentgate_assets]
+export = system
+
+[collections/agentgate_findings]
+export = system
+
+[transforms/agentgate_findings]
+export = system

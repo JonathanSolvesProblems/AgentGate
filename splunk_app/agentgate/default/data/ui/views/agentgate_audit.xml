@@ -1,0 +1,134 @@
+<dashboard version="2" theme="dark">
+  <label>AgentGate Audit</label>
+  <description>Every AI-agent action against Splunk that AgentGate has gated. Filter by decision, agent, or policy to investigate.</description>
+
+  <init>
+    <set token="form.window">-24h</set>
+  </init>
+
+  <row>
+    <panel>
+      <title>Decisions (last 24h)</title>
+      <single>
+        <search>
+          <query>index=agentgate_audit earliest=-24h | stats count</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="useColors">1</option>
+        <option name="rangeValues">[0,5,20]</option>
+        <option name="rangeColors">["0x65a637","0xf7bc38","0xd93f3c"]</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Blocks (last 24h)</title>
+      <single>
+        <search>
+          <query>index=agentgate_audit decision=block earliest=-24h | stats count</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="useColors">1</option>
+        <option name="rangeValues">[0,1,5]</option>
+        <option name="rangeColors">["0x65a637","0xf7bc38","0xd93f3c"]</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Pending findings</title>
+      <single>
+        <search>
+          <query>| inputlookup agentgate_findings | search status=pending | stats count</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="useColors">1</option>
+        <option name="rangeValues">[0,1,5]</option>
+        <option name="rangeColors">["0x65a637","0xf7bc38","0xd93f3c"]</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Avg latency (ms)</title>
+      <single>
+        <search>
+          <query>index=agentgate_audit earliest=-24h | stats avg(elapsed_ms) as ms | eval ms=round(ms,0)</query>
+        </search>
+      </single>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Decisions over time</title>
+      <chart>
+        <search>
+          <query>index=agentgate_audit earliest=-24h | timechart span=15m count by decision</query>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Decisions by policy</title>
+      <chart>
+        <search>
+          <query>index=agentgate_audit decision!=allow earliest=-24h
+| spath path=stages{}.details.matched{}.id output=policy_id
+| stats count by policy_id | sort -count</query>
+        </search>
+        <option name="charting.chart">bar</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Agents by decision mix</title>
+      <table>
+        <search>
+          <query>index=agentgate_audit earliest=-24h | stats count(eval(decision="allow")) as allowed count(eval(decision="block")) as blocked count(eval(decision="require_approval")) as queued by agent_id | sort -blocked</query>
+        </search>
+      </table>
+    </panel>
+    <panel>
+      <title>Stage latency profile</title>
+      <chart>
+        <search>
+          <query>index=agentgate_audit earliest=-24h
+| spath path=stages{} output=stage_json
+| mvexpand stage_json
+| spath input=stage_json
+| stats avg(elapsed_ms) as ms p95(elapsed_ms) as p95 by stage
+| eval ms=round(ms,1), p95=round(p95,1)
+| sort -ms</query>
+        </search>
+        <option name="charting.chart">bar</option>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Findings awaiting analyst approval</title>
+      <table>
+        <search>
+          <query>| inputlookup agentgate_findings | search status=pending
+| eval matched=split(matched_policies,"; ")
+| table created_at agent_id tool_name severity summary matched
+| sort -created_at</query>
+        </search>
+      </table>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Block log</title>
+      <table>
+        <search>
+          <query>index=agentgate_audit decision=block earliest=-24h
+| spath path=stages{}.details.matched{} output=matched
+| eval policies=mvjoin(mvfilter(NOT isnull(matched)),"; ")
+| table _time agent_id tool_name summary
+| sort -_time</query>
+        </search>
+      </table>
+    </panel>
+  </row>
+</dashboard>
