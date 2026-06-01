@@ -1,0 +1,14 @@
+[project]
+name = "agentgate"
+version = "0.0.1"
+description = "Splunk-native pre-action governance and blast-radius layer for AI agents"
+requires-python = ">=3.12,<3.14"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Jonathan Andrei" }]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
