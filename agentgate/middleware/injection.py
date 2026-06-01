@@ -18,16 +18,48 @@ from ..models import Severity, StageResult, ToolCall
 # Patterns drawn from published injection corpora (NIST AISC, Anthropic redteam,
 # WithSecure indirect-injection examples, Simon Willison's living taxonomy).
 PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    ("override_instruction", re.compile(r"\b(?:ignore|disregard|forget)\s+(?:all\s+)?(?:previous|prior|above|the\s+system)?\s*(?:instructions?|prompts?|messages?|rules?)\b", re.IGNORECASE)),
-    ("system_persona", re.compile(r"<\|?\s*(?:system|assistant|im_start)\s*\|?>", re.IGNORECASE)),
-    ("jailbreak_persona", re.compile(r"\b(?:you\s+are\s+now|act\s+as|pretend\s+to\s+be)\s+(?:DAN|developer\s+mode|jailbroken|an?\s+unrestricted)", re.IGNORECASE)),
-    ("data_exfil_request", re.compile(r"\b(?:send|post|upload|email|exfiltrate)\s+(?:the\s+)?(?:keys?|secrets?|tokens?|passwords?|env|credentials?)", re.IGNORECASE)),
-    ("destructive_command", re.compile(r"\b(?:delete|drop|truncate|rm\s+-rf|wipe|format)\s+(?:the\s+)?(?:index|table|database|disk|all)", re.IGNORECASE)),
-    ("policy_disable", re.compile(r"\b(?:disable|turn\s+off|deactivate|suppress)\s+(?:the\s+)?(?:safety|filter|guardrail|moderation|policy|logging|audit)", re.IGNORECASE)),
-    ("tool_override", re.compile(r"\b(?:override|bypass|skip)\s+(?:the\s+)?(?:approval|review|gate|check)", re.IGNORECASE)),
+    ("override_instruction", re.compile(
+        r"\b(?:ignore|disregard|forget|reset)\s+(?:all\s+|the\s+|any\s+)?"
+        r"(?:previous|prior|above|earlier|your|the\s+system)?\s*"
+        r"(?:instructions?|prompts?|messages?|rules?|policies|policy|guidelines?|context)\b",
+        re.IGNORECASE,
+    )),
+    ("system_persona", re.compile(
+        r"<\|?\s*(?:system|assistant|im_start|im_end)\s*\|?>",
+        re.IGNORECASE,
+    )),
+    ("jailbreak_persona", re.compile(
+        r"\b(?:you\s+are\s+now|act\s+as(?:\s+if(?:\s+you\s+are)?)?|pretend\s+to\s+be|behave\s+as|roleplay\s+as)\s+"
+        r"(?:an?\s+)?(?:\w+\s+){0,4}"
+        r"(?:DAN|developer\s+mode|jailbroken|unrestricted|uncensored|no\s+filter|root\s+access|no\s+policy\s+constraints?)",
+        re.IGNORECASE,
+    )),
+    ("data_exfil_request", re.compile(
+        r"\b(?:send|post|upload|email|exfiltrate|leak|dump)\s+"
+        r"(?:the\s+|all\s+|any\s+|my\s+)?(?:\w+\s+){0,3}"
+        r"(?:keys?|secrets?|tokens?|passwords?|env|credentials?|api\s+keys?|session\s+tokens?|cookies?|private\s+keys?)",
+        re.IGNORECASE,
+    )),
+    ("destructive_command", re.compile(
+        r"\b(?:delete|drop|truncate|rm\s+-rf|wipe|format|destroy|erase)\s+"
+        r"(?:the\s+|all\s+|every\s+|/)?\s*"
+        r"(?:index|table|database|disk|partition|file|all|everything|/)",
+        re.IGNORECASE,
+    )),
+    ("policy_disable", re.compile(
+        r"\b(?:disable|turn\s+off|deactivate|suppress|bypass|skip|override)\s+"
+        r"(?:the\s+|all\s+|any\s+)?(?:\w+\s+){0,2}"
+        r"(?:safety|filter|guardrail|moderation|content\s+moderation|polic(?:y|ies)|"
+        r"logging|audit|approval|review|gate|check|protection|restriction)",
+        re.IGNORECASE,
+    )),
+    ("system_override_tag", re.compile(
+        r"\[\s*(?:SYSTEM\s+OVERRIDE|ADMIN\s+OVERRIDE|JAILBREAK|DEBUG\s+MODE|ROOT)\s*\]",
+        re.IGNORECASE,
+    )),
     ("base64_blob", re.compile(r"\b[A-Za-z0-9+/]{120,}={0,2}\b")),
-    ("hidden_unicode_tag", re.compile(r"[\U000E0000-\U000E007F]")),  # Tags block exploit
-    ("zero_width_smuggle", re.compile(r"[​-‍﻿]{4,}")),
+    ("hidden_unicode_tag", re.compile(r"[\U000E0000-\U000E007F]")),
+    ("zero_width_smuggle", re.compile(r"[​-‍⁠﻿]{4,}")),
 ]
 
 

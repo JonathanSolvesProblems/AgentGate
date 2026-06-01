@@ -15,8 +15,9 @@ from ..models import Decision, Severity, StageResult, ToolCall
 from ..policies import POLICIES, POLICY_BY_ID, Policy
 
 DESTRUCTIVE_SPL_RE = re.compile(
-    r"\b(?:\|\s*delete\b|\bcrawl\b|outputlookup[^|]*append\s*=\s*false|"
-    r"output(?:csv|lookup)\s+[^|]*[\s\"']_internal|[\s|](_internal|_audit|_introspection))",
+    r"(?:\|\s*delete\b|\bcrawl\b|outputlookup[^|]*append\s*=\s*false|"
+    r"output(?:csv|lookup)\s+[^|]*[\s\"']_internal|"
+    r"(?<![A-Za-z0-9_])(_internal|_audit|_introspection)\b)",
     re.IGNORECASE,
 )
 
