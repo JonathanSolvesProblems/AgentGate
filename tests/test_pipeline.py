@@ -135,7 +135,8 @@ def test_latency_p95_under_500ms(pipeline: Pipeline) -> None:
     p95 = timings[int(len(timings) * 0.95)]
     p99 = timings[int(len(timings) * 0.99)]
     print(f"\npipeline latency (ms): p50={p50:.2f} p95={p95:.2f} p99={p99:.2f}")
-    assert p95 < 500, f"p95 too high: {p95}ms"
+    # Headline claim is 0.56ms p95 — assert within an order of magnitude.
+    assert p95 < 5.0, f"p95 too high: {p95}ms"
 
 
 def test_metrics_summary(pipeline: Pipeline) -> None:
@@ -148,3 +149,27 @@ def test_metrics_summary(pipeline: Pipeline) -> None:
     fpr = fps / total if total else 0.0
     print(f"\npolicy-gate FPR over {total} benign tool calls: {fpr:.3f} ({fps}/{total})")
     assert fpr <= 0.05
+
+
+def test_policy_stage_exception_fails_closed(pipeline: Pipeline, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Regression for the silent BLOCK-to-ALLOW bug. If the gating stage raises,
+    the verdict MUST be BLOCK with severity HIGH, not ALLOW. Without this guard
+    a single bug in _matches() would defeat the entire gate."""
+    policy_stage = next(s for s in pipeline.stages if s.name == "policy")
+
+    def explode(*_a: object, **_k: object) -> None:
+        raise RuntimeError("simulated policy stage crash")
+
+    monkeypatch.setattr(policy_stage, "evaluate", explode)
+
+    tc = ToolCall(
+        agent_id="exception-bot",
+        tool_name="propose_disable_saved_search",
+        arguments={"name": "AG: SQL Injection on Payment App"},
+    )
+    v = pipeline.evaluate(tc)
+
+    assert v.decision == Decision.BLOCK, "policy-stage crash must fail closed"
+    pol_stage = next(s for s in v.stages if s.stage == "policy")
+    assert pol_stage.details.get("fail_closed") is True
+    assert "simulated policy stage crash" in pol_stage.details.get("error", "")

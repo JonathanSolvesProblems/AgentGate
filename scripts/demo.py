@@ -1,12 +1,12 @@
-"""End-to-end demo runner: three canonical scenarios.
+"""End-to-end demo runner: four canonical scenarios.
 
 Each scenario constructs a ToolCall, runs it through the AgentGate pipeline,
 emits an audit event to Splunk via HEC, and (where applicable) drafts a Finding
 into the agentgate_findings KV collection. Renders results to the console with
 rich for the demo video.
 
-Run: python scripts/demo.py            # all three
-     python scripts/demo.py friendly   # just one
+Run: python scripts/demo.py             # all four
+     python scripts/demo.py friendly    # just one
 """
 
 from __future__ import annotations
@@ -143,6 +143,37 @@ def render_verdict(name: str, tc: ToolCall, verdict: GateVerdict) -> None:
         title=label,
         border_style=style.split()[0],
     ))
+
+    # Blast-radius graph panel — this is the moat made visible. Surfaces the
+    # techniques + compliance bands lost and the per-asset redundancy walk
+    # so a viewer can see WHY the verdict landed where it did.
+    br = next((s for s in verdict.stages if s.stage == "blast_radius"), None)
+    if br and br.details and br.details.get("applicable") is not False and br.details.get("assets_affected"):
+        det = br.details
+        lines: list[str] = []
+        tlost = det.get("techniques_lost") or []
+        clost = det.get("compliance_lost") or []
+        if tlost:
+            lines.append(f"[bold]techniques_lost   [/bold] = {tlost}")
+        if clost:
+            lines.append(f"[bold]compliance_lost  [/bold] = {clost}")
+        assets = det.get("assets_affected") or []
+        for a in assets[:3]:
+            red = a.get("redundancy", 0)
+            red_color = "red bold" if red == 0 else ("yellow" if red < 3 else "green")
+            tags = ",".join(a.get("compliance_tags") or []) or "none"
+            lines.append(
+                f"[bold]asset[/bold]            = {a['asset_id']:<32s} "
+                f"crit={a.get('criticality','?')}  tags={tags}  "
+                f"redundancy=[{red_color}]{red}[/{red_color}]"
+            )
+        if len(assets) > 3:
+            lines.append(f"... +{len(assets)-3} more assets")
+        console.print(Panel(
+            "\n".join(lines),
+            title="Knowledge-object blast-radius graph",
+            border_style="magenta",
+        ))
 
     pol = next((s for s in verdict.stages if s.stage == "policy"), None)
     if pol and pol.details.get("matched"):

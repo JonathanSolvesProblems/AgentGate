@@ -38,6 +38,11 @@ dist/
 build/
 node_modules/
 
+# Submission-private working files (don't ship these in the public repo)
+submission.md
+demo_script.md
+.workflow_*.json
+
 # Local LLM artifacts
 ollama_models/
 *.gguf

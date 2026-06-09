@@ -1,5 +1,7 @@
 # AgentGate: Stop rogue AI actions on Splunk before they hit production
 
+[![CI](https://github.com/JonathanSolvesProblems/AgentGate/actions/workflows/ci.yml/badge.svg)](https://github.com/JonathanSolvesProblems/AgentGate/actions/workflows/ci.yml) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE) [![Python](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/)
+
 A Splunk-native pre-action governance and blast-radius layer for AI agents. Built for the [Splunk Agentic Ops Hackathon](https://splunk.devpost.com/) (Security track, deadline 2026-06-15).
 
 ## The pain
@@ -12,19 +14,19 @@ AgentGate is the gate between any AI agent and Splunk that produces an answerabl
 
 ## What it does
 
-AgentGate intercepts every tool call an agent makes against Splunk and runs a five-stage decision pipeline:
+AgentGate intercepts every tool call an agent makes against Splunk and runs **five deterministic stages plus one advisory sixth**:
 
 1. **Prompt-injection check** — heuristic + obfuscation-normalised scan over tool inputs and the context (log lines) the agent has read. Targets override-style injection (LLM01 indirect).
 2. **Blast-radius walk** — NetworkX graph of saved searches → indexes → sourcetypes → hosts → assets. Computes which MITRE techniques and compliance tags lose coverage and how many other detections share that coverage (the redundancy story).
 3. **Cost prediction** — SVC-hour estimate from the proposed SPL. Cloud target: Cisco Deep Time Series Model.
 4. **Policy engine** — 12 deterministic rules mapped to NIST AI RMF, OWASP LLM Top 10, EU AI Act Article 14, PCI DSS 10, HIPAA 164.308, SOX, ISO/IEC 42001.
-5. **Decision synthesis** — `ALLOW | REQUIRE_APPROVAL | BLOCK`. Non-ALLOW persists as a Finding (mock of ES 8 v2 `/findings` API).
+5. **Decision synthesis** — `ALLOW | REQUIRE_APPROVAL | BLOCK`, read **only** from the policy stage. Non-ALLOW persists as a Finding (mock of ES 8 v2 `/findings` API). Fails closed: if the gating stage raises, the verdict is BLOCK with severity=HIGH (regression test: `test_policy_stage_exception_fails_closed`).
 
-A **sixth stage** runs Foundation-Sec-1.1-8B-Instruct as an **advisory Finding-explainer** — it does NOT gate decisions. Its paragraph is attached to the Finding so a human reviewer reads the risk in natural language. Decisions are 100% deterministic, reproducible, and explainable from the policy library alone. This is the deterministic-vs-generative thesis: deterministic where audit demands reproducibility, generative where humans demand explanation.
+The **sixth stage** runs Foundation-Sec-1.1-8B-Instruct as an **advisory Finding-explainer** — it does NOT gate decisions. Its paragraph is attached to the Finding so a human reviewer reads the risk in natural language. Decisions are reproducible from the policy library alone. This is the deterministic-vs-generative thesis: deterministic where audit demands reproducibility, generative where humans demand explanation.
 
 Every verdict, regardless of outcome, fans out to the `agentgate_audit` index via HEC. The bundled dashboard makes it the system of record for AI-agent governance.
 
-See [docs/architecture.md](docs/architecture.md) for the full diagram and module map.
+See [architecture_diagram.md](architecture_diagram.md) for the full diagram, module map, and deterministic-vs-generative thesis.
 
 ## Measured performance
 
@@ -60,7 +62,21 @@ Run with `pytest tests/ -v -s` (full suite, no slow tests) or `pytest tests/ -v 
 
 ## Defensible uniqueness statement
 
-> **No other tool combines a Splunk-native pre-action blast-radius walk of the knowledge-object graph with an ES 8 v2 Findings approval artifact** — these two are the durable moat. Cisco DefenseClaw (May 2026) is a generic LLM-proxy firewall: no KO graph, no ES 8 Findings emission, no Splunk-native policy. Microsoft Agent Governance Toolkit is framework-agnostic and has zero Splunk integration. Splunk MCP Server 1.2 added coarse tool enable/disable but no per-action blast-radius or approval gate.
+> **No other tool combines a Splunk-native pre-action blast-radius walk of the knowledge-object graph with an ES 8 v2 Findings approval artifact** — these two are the durable moat.
+
+Splunk MCP Telemetry Dashboard v1.2 (May 2026) and Splunkbase MCP Watch audit agent activity **after** the action; AgentGate gates it **before**. Cisco DefenseClaw is a generic LLM-proxy firewall: no KO graph, no ES 8 Findings emission, no Splunk-native policy. Microsoft Agent Governance Toolkit is framework-agnostic with zero Splunk integration. Splunk MCP Server 1.2 added coarse tool enable/disable but no per-action blast-radius or approval gate.
+
+Side-by-side prior-art table with citations: [docs/comparison.md](docs/comparison.md).
+
+## Cross-track applicability
+
+While the primary submission is the Security track, the same gate applies to the other two tracks through the existing policy library — no code changes required:
+
+| Track | Policy that already applies | Example tool call gated |
+|---|---|---|
+| **Security** (primary) | POL-001/002/003/006/009/010 | `propose_disable_saved_search("AG: SQL Injection on Payment App")` → BLOCK |
+| **Observability** | POL-008 (mass-change), POL-009 (system-index mutation) | An ITSI agent proposing to rewrite a `summary` index → BLOCK / REQUIRE_APPROVAL |
+| **Platform & Developer Experience** | POL-004 (destructive SPL), POL-007 (cost), POL-008 (Excessive Agency) | An MLTK agent proposing `| fit` against `_audit` → BLOCK |
 
 ## Standards mapped
 
