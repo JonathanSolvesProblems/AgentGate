@@ -12,8 +12,8 @@ from dotenv import load_dotenv
 REPO_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(REPO_ROOT / ".env")
 
-import splunklib.client as splunk_client
-import splunklib.results as splunk_results
+import splunklib.client as splunk_client  # noqa: E402  (load_dotenv must run first)
+import splunklib.results as splunk_results  # noqa: E402
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

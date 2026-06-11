@@ -79,9 +79,9 @@ def test_metrics_report() -> None:
     print(f"in-scope corpus:  positives={len(POSITIVE)} negatives={len(NEGATIVE)}")
     print(f"  TP={tp} FN={fn} TN={tn} FP={fp}")
     print(f"  precision={precision:.3f}  recall={recall:.3f}  F1={f1:.3f}  specificity={specificity:.3f}")
-    print(f"out-of-scope corpus (INJECAGENT-style tool hijacking, not in heuristic threat model):")
+    print("out-of-scope corpus (INJECAGENT-style tool hijacking, not in heuristic threat model):")
     print(f"  total={len(OUT_OF_SCOPE)}  intentionally-missed-by-heuristic={oos_missed}/{len(OUT_OF_SCOPE)}")
-    print(f"  -> routed to Foundation-Sec semantic stage in production pipeline")
+    print("  -> routed to Foundation-Sec semantic stage in production pipeline")
     assert precision >= 0.85, f"precision too low: {precision}"
     assert recall >= 0.85, f"recall too low: {recall}"
     assert specificity >= 0.90, f"specificity too low: {specificity}"

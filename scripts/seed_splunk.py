@@ -24,7 +24,7 @@ from rich.console import Console
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from agentgate.splunk_client import get_rest_client, get_service, rest  # noqa: E402
+from agentgate.splunk_client import get_service, rest  # noqa: E402
 
 console = Console()
 fake = Faker()
@@ -172,7 +172,7 @@ ASSETS: list[dict[str, Any]] = [
     {"asset_id": "host:webfront01", "asset_type": "host", "compliance_tags": ["PCI"], "criticality": "high", "owner": "frontend"},
     {"asset_id": "user:svc_payment", "asset_type": "user", "compliance_tags": ["PCI"], "criticality": "high", "owner": "payments"},
     {"asset_id": "user:svc_hl7", "asset_type": "user", "compliance_tags": ["HIPAA"], "criticality": "high", "owner": "clinical"},
-    {"asset_id": f"sourcetype:windows:security", "asset_type": "sourcetype", "compliance_tags": ["SOX", "PCI"], "criticality": "high", "owner": "soc"},
+    {"asset_id": "sourcetype:windows:security", "asset_type": "sourcetype", "compliance_tags": ["SOX", "PCI"], "criticality": "high", "owner": "soc"},
 ]
 
 
@@ -223,7 +223,6 @@ def upsert_saved_search(service: Any, spec: dict[str, Any]) -> None:
 
 
 def ensure_kv_collection(service: Any) -> None:
-    app = service.apps[DEMO_APP]  # search app for visibility
     collections = service.kvstore
     if KV_COLLECTION in collections:
         console.print(f"  KV collection {KV_COLLECTION!r} already exists")
@@ -364,7 +363,7 @@ def main() -> int:
         if "\nAGENTGATE_HEC_TOKEN=\n" in (env_text + "\n") or env_text.rstrip().endswith("AGENTGATE_HEC_TOKEN="):
             env_text = env_text.replace("AGENTGATE_HEC_TOKEN=", f"AGENTGATE_HEC_TOKEN={audit_token}")
             env_path.write_text(env_text)
-            console.print(f"  [green]wrote AGENTGATE_HEC_TOKEN to .env[/green]")
+            console.print("  [green]wrote AGENTGATE_HEC_TOKEN to .env[/green]")
 
     console.print("\n[bold]3. Saved searches[/bold]")
     for spec in SAVED_SEARCHES:

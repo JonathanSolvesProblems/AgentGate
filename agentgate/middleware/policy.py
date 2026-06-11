@@ -12,7 +12,7 @@ import time
 from typing import Iterable
 
 from ..models import Decision, Severity, StageResult, ToolCall
-from ..policies import POLICIES, POLICY_BY_ID, Policy
+from ..policies import POLICY_BY_ID, Policy
 
 DESTRUCTIVE_SPL_RE = re.compile(
     r"(?:\|\s*delete\b|\bcrawl\b|outputlookup[^|]*append\s*=\s*false|"

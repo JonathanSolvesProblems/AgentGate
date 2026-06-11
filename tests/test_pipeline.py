@@ -79,7 +79,7 @@ def test_benign_corpus_zero_false_positives(pipeline: Pipeline) -> None:
         v = pipeline.evaluate(tc)
         if v.decision != Decision.ALLOW:
             bad.append((tc.arguments["query"], v.summary))
-    assert not bad, f"benign calls wrongly gated:\n" + "\n".join(f"  {q!r}: {s}" for q, s in bad)
+    assert not bad, "benign calls wrongly gated:\n" + "\n".join(f"  {q!r}: {s}" for q, s in bad)
 
 
 def test_friendly_fire_blocks(pipeline: Pipeline) -> None:

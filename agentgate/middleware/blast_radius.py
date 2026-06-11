@@ -7,7 +7,6 @@ For read-only tool calls (e.g. splunk_run_query), this stage passes through.
 from __future__ import annotations
 
 import time
-from typing import Any
 
 from ..graph import GraphArtifact, blast_radius
 from ..models import Severity, StageResult, ToolCall

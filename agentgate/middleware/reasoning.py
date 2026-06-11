@@ -10,7 +10,6 @@ To keep the demo snappy we cap output to 180 tokens and use temperature 0.1.
 from __future__ import annotations
 
 import time
-from typing import Any
 
 from ollama import Client
 
