@@ -150,11 +150,37 @@ Per Jeff Wiedemann's framing of "the most likely outcome is compliance blocks pr
 
 These are the questions a procurement review WILL ask. Naming them is part of the proposal, not a defect.
 
+## Splunk AI capabilities leveraged
+
+The hackathon's resources page names five capability families. AgentGate touches all five — three directly, two indirectly through the MCP gating boundary.
+
+| Capability | Used? | How |
+|---|---|---|
+| **AI for Splunk Apps** (Python SDK agentic workflows) | Direct | Pipeline built on `splunklib.client` + `splunklib.results` + REST. Splunk app bundle in [`splunk_app/agentgate/`](splunk_app/agentgate/) ships savedsearches.conf, collections.conf, transforms.conf, dashboard XML, app.conf, metadata. |
+| **Splunk MCP Server** | Direct | v1.2.0 installed and smoke-tested. Encrypted-token auth. AgentGate sits in front of MCP. |
+| **Splunk Hosted Models** (Foundation-Sec) | Direct | Foundation-Sec-1.1-8B-Instruct is the reasoning stage; Ollama on dev license today, swap to `\| ai provider=splunk model=foundation-sec-1.1-8b-instruct` on Cloud. |
+| **Splunk AI Assistant (SAIA)** | Indirect | SAIA tools (`saia_generate_spl`, `saia_explain_spl`, `saia_optimize_spl`, `saia_ask_splunk_question`) are exposed through the MCP Server. Any agent that calls them through MCP is gated by AgentGate's five stages. |
+| **Splunk AI Toolkit / Cisco DTS** | Indirect | The `\| ai` command and Cisco Deep Time Series Model are the documented production targets for the reasoning and cost stages respectively. Dev license substitutes; one-line swap to Cloud. |
+
 ## Bonus prize chase
 
 - **Best Use of Splunk MCP Server** ($1K) — AgentGate sits in front of the MCP server, exercises its tool catalog, and is the natural complement to the read-only MCP surface.
 - **Best Use of Splunk Hosted Models** ($1K) — Foundation-Sec-1.1-8B-Instruct on the reasoning stage, demonstrably swappable to the Splunk-hosted invocation in production.
 - **Best Use of Splunk Developer Tools** ($1K) — Built on the public `splunk-sdk` Python SDK (`splunklib.client` + `splunklib.results`), the Splunk REST API, KV-store collections, HEC, dashboard XML, and a fully-formed app bundle in `splunk_app/agentgate/` (savedsearches.conf, collections.conf, transforms.conf, dashboard XML, app.conf, metadata).
+
+## Splunk references
+
+Official docs and resources the build aligns to:
+
+- [Splunk MCP Server on Splunkbase (app 7931)](https://splunkbase.splunk.com/app/7931)
+- [About MCP Server for Splunk platform](https://help.splunk.com/en/splunk-cloud-platform/mcp-server-for-splunk-platform/1.2/about-mcp-server-for-splunk-platform)
+- [Splunk MCP Server: Making Your Apps Agent-Ready](https://community.splunk.com/t5/Product-News-Announcements/GA-Splunk-MCP-Server-Making-Your-Apps-quot-Agent-Ready-quot/ba-p/759935)
+- [Foundation-Sec-1.1-8B-Instruct on Hugging Face](https://huggingface.co/fdtn-ai/Foundation-Sec-8B-Instruct)
+- [Splunk Hosted Models overview](https://www.splunk.com/en_us/blog/artificial-intelligence/splunk-launches-hosted-generative-ai-models.html)
+- [Splunk Python SDK (`splunk-sdk-python`)](https://github.com/splunk/splunk-sdk-python)
+- [Splunk Enterprise Security 8 API reference (Findings + Investigations)](https://help.splunk.com/en/splunk-enterprise-security-8/api-reference/8.3/splunk-enterprise-security-api-reference)
+- [Splunk Developer Program](https://dev.splunk.com/) (developer license)
+- [Splunk Community Slack — #splunk-ai-hackathon](https://splk.it/slack)
 
 ## License
 
