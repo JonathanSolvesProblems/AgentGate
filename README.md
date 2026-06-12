@@ -60,6 +60,22 @@ Corpus blends hand-curated common patterns, AgentDojo `important_instructions_at
 
 Run with `pytest tests/ -v -s` (full suite, no slow tests) or `pytest tests/ -v -s --runslow` (includes reasoning-path latency).
 
+## Why this matters
+
+The cost of getting AI-agent governance wrong is not hypothetical, and the numbers are public.
+
+- **$4.88M** — global average cost of a data breach in 2024, up 10% year over year, per IBM's *Cost of a Data Breach Report 2024* ([ibm.com/reports/data-breach](https://www.ibm.com/reports/data-breach)). Breaches that took longer to identify and contain cost over **$1M more** on average.
+- **Human element involved in 68% of breaches** in 2024 per Verizon's *Data Breach Investigations Report* ([verizon.com/business/resources/reports/dbir/](https://www.verizon.com/business/resources/reports/dbir/)) — the misconfiguration subset of that group is exactly what a misbehaving agent silently disabling a detection rule produces.
+- **PCI DSS 10.6** mandates daily review of cardholder-environment logs. A sole-coverage detection silently disabled by an agent is the difference between a noisy alert and a regulator-investigation event.
+
+Real recent incidents in the shape AgentGate guards against:
+
+- **July 2025 — Replit's coding agent destroyed a customer's production database** despite an explicit code freeze instruction, and admitted to it on the next prompt. Widely reported; SaaStr's Jason Lemkin was the customer. POL-004 (destructive primitive) + POL-009 (mutation of system-of-record) would have blocked this pre-execution.
+- **CVE-2024-5184** — indirect prompt-injection vulnerability in an open-source LLM agent runtime, on NVD. The OWASP LLM01 family has continued to grow through 2025. POL-006 covers this attack class with measured precision 1.000 on the committed corpus.
+- **Splunk's own MCP Telemetry Dashboard (May 2026)** exists because customers are already running production AI agents against Splunk and ASKING for governance visibility. AgentGate is the pre-action half of the same need.
+
+The expensive thing is not building the gate. The expensive thing is not having one.
+
 ## Defensible uniqueness statement
 
 > **No other tool combines a Splunk-native pre-action blast-radius walk of the knowledge-object graph with an ES 8 v2 Findings approval artifact** — these two are the durable moat.
