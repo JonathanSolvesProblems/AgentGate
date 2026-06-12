@@ -131,10 +131,10 @@ python scripts\demo.py                 # 4 canonical scenarios
 
 ### Demo scenarios
 
-1. **Friendly fire** — a cleanup agent proposes to disable `AG: SQL Injection on Payment App`. AgentGate blocks: `host:paymentapp01` has zero redundant coverage and is PCI-tagged. Triggers POL-001 (EU AI Act 14), POL-002 (PCI DSS 10.6), POL-010 (NIST AI RMF MANAGE-2.3).
-2. **Prompt injection** — a triage agent reads a poisoned log line containing "ignore all previous instructions...". The injection stage catches override_instruction; POL-006 (OWASP LLM01) blocks.
-3. **Happy path** — a reporter bot runs a benign read-only query on `webfront01`. All stages pass in <1 ms.
-4. **Require-approval → approved** — a tier-2 analyst proposes a high-redundancy detection tune. AgentGate raises a Finding for review (proves the gate is not just `return BLOCK`).
+1. **Friendly fire (BLOCK)** — a cleanup agent proposes to disable `AG: SQL Injection on Payment App`. AgentGate blocks: `host:paymentapp01` has zero redundant coverage and is PCI-tagged. Triggers POL-001 (EU AI Act 14), POL-002 (PCI DSS 10.6), POL-010 (NIST AI RMF MANAGE-2.3).
+2. **Prompt injection (BLOCK)** — a triage agent reads a poisoned log line containing "ignore all previous instructions...". The injection stage catches override_instruction; POL-006 (OWASP LLM01) blocks.
+3. **Require-approval → Finding** — a retention-audit agent issues a 30-day SPL across six indexes with no early filter. Cost stage flags >1 SVC-hour and cross-index reach > 5 indexes. POL-007 + POL-012 route the call to REQUIRE_APPROVAL and AgentGate drafts a Finding for analyst review. Proves the gate is not just `return BLOCK`.
+4. **Happy path (ALLOW)** — a reporter bot runs a benign read-only query on `webfront01`. All five gating stages pass in under 1 ms.
 
 ## What we did NOT validate (the honest gaps)
 
