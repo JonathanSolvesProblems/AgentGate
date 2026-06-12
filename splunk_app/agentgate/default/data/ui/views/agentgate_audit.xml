@@ -1,4 +1,4 @@
-<dashboard>
+<dashboard version="1.1">
   <label>AgentGate Audit</label>
   <description>Every AI-agent action against Splunk that AgentGate has gated. Filter by decision, agent, or policy to investigate.</description>
 
@@ -35,7 +35,7 @@
       <title>Pending findings</title>
       <single>
         <search>
-          <query>| inputlookup agentgate_findings | search status=pending | stats count</query>
+          <query>index=agentgate_audit decision=require_approval earliest=-24h | stats count</query>
         </search>
         <option name="colorBy">value</option>
         <option name="useColors">1</option>
@@ -108,10 +108,9 @@
       <title>Findings awaiting analyst approval</title>
       <table>
         <search>
-          <query>| inputlookup agentgate_findings | search status=pending
-| eval matched=split(matched_policies,"; ")
-| table created_at agent_id tool_name severity summary matched
-| sort -created_at</query>
+          <query>index=agentgate_audit decision=require_approval earliest=-24h
+| table _time agent_id tool_name summary finding_id
+| sort -_time</query>
         </search>
       </table>
     </panel>
