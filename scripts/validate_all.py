@@ -7,7 +7,6 @@ otherwise. The script never modifies state — it is read-only.
 
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import sys
