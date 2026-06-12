@@ -3,8 +3,8 @@ agent has been exposed to (Splunk log lines it just read, etc.).
 
 This is intentionally heuristic, not ML. Heuristics are deterministic, auditable,
 and have a publishable false-positive rate — properties enterprise compliance teams
-want. A future iteration could call splunklib.ai.detect_injection() as a second
-opinion.
+want. The advisory Foundation-Sec stage is the semantic second opinion for the
+out-of-scope class (INJECAGENT-style tool-execution hijacking).
 """
 
 from __future__ import annotations

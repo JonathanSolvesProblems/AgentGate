@@ -154,7 +154,7 @@ These are the questions a procurement review WILL ask. Naming them is part of th
 
 - **Best Use of Splunk MCP Server** ($1K) — AgentGate sits in front of the MCP server, exercises its tool catalog, and is the natural complement to the read-only MCP surface.
 - **Best Use of Splunk Hosted Models** ($1K) — Foundation-Sec-1.1-8B-Instruct on the reasoning stage, demonstrably swappable to the Splunk-hosted invocation in production.
-- **Best Use of Splunk Developer Tools** ($1K) — Built on `splunk-sdk` (`splunklib.ai`'s sibling), the Splunk REST API, KV-store collections, HEC, dashboard XML, and a fully-formed app bundle in `splunk_app/agentgate/`.
+- **Best Use of Splunk Developer Tools** ($1K) — Built on the public `splunk-sdk` Python SDK (`splunklib.client` + `splunklib.results`), the Splunk REST API, KV-store collections, HEC, dashboard XML, and a fully-formed app bundle in `splunk_app/agentgate/` (savedsearches.conf, collections.conf, transforms.conf, dashboard XML, app.conf, metadata).
 
 ## License
 

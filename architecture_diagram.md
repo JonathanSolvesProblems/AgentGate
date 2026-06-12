@@ -7,8 +7,8 @@ Splunk-native pre-action governance + blast-radius layer for AI agents acting on
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │ AGENT PLANE                                                          │
-│   Any LLM agent (Claude, Cursor, splunklib.ai Agent, SOAR playbook)  │
-│   issues an MCP tool call against Splunk.                            │
+│   Any LLM agent (Claude / Cursor MCP clients, custom Python agent,   │
+│   SOAR playbook) issues an MCP tool call against Splunk.             │
 └────────────────────────────────┬─────────────────────────────────────┘
                                  │  ToolCall(agent_id, tool_name, args,
                                  │           raw_user_prompt,
@@ -83,7 +83,7 @@ Splunk-native pre-action governance + blast-radius layer for AI agents acting on
 ```
                        ┌────────────────────────────────────┐
                        │  Calling agent (LLM via MCP)       │
-                       │  Claude / Cursor / splunklib.ai    │
+                       │  Claude / Cursor / custom Python   │
                        └─────────────────┬──────────────────┘
                                          │ tool_call
                                          ▼
