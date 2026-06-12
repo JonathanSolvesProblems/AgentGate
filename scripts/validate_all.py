@@ -3,6 +3,10 @@
 Probes every surface AgentGate touches and prints a green/red status table.
 Run this before every recording attempt. Exits 0 if everything is ready, 1
 otherwise. The script never modifies state — it is read-only.
+
+Auto-bootstraps into the project venv if run with a different Python (e.g.
+plain `python scripts/validate_all.py` on Windows picks up system Python,
+which doesn't have splunklib / pytest installed).
 """
 
 from __future__ import annotations
@@ -16,6 +20,25 @@ from pathlib import Path
 from typing import Callable
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _bootstrap_into_venv() -> None:
+    """If a project .venv exists and we're not already running with its Python,
+    re-exec ourselves with the venv interpreter. Idempotent."""
+    venv_python = REPO_ROOT / ".venv" / "Scripts" / "python.exe"
+    if not venv_python.exists():
+        venv_python = REPO_ROOT / ".venv" / "bin" / "python"  # POSIX fallback
+        if not venv_python.exists():
+            return
+    current = Path(sys.executable).resolve()
+    target = venv_python.resolve()
+    if current == target:
+        return
+    print(f"[bootstrap] re-exec under {target}", flush=True)
+    os.execv(str(target), [str(target), *sys.argv])
+
+
+_bootstrap_into_venv()
 sys.path.insert(0, str(REPO_ROOT))
 
 import httpx  # noqa: E402
