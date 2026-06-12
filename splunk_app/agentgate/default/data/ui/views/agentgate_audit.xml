@@ -90,13 +90,15 @@
       <title>Stage latency profile</title>
       <chart>
         <search>
-          <query>index=agentgate_audit earliest=-24h
-| spath path=stages{} output=stage_json
-| mvexpand stage_json
-| spath input=stage_json
-| stats avg(elapsed_ms) as ms p95(elapsed_ms) as p95 by stage
-| eval ms=round(ms,1), p95=round(p95,1)
-| sort -ms</query>
+          <query>search index=agentgate_audit earliest=-24h
+| spath stages{}.stage output=stage_name
+| spath stages{}.elapsed_ms output=stage_elapsed
+| eval pair=mvzip(stage_name, stage_elapsed, "|")
+| mvexpand pair
+| eval stage=mvindex(split(pair,"|"),0), ms=tonumber(mvindex(split(pair,"|"),1))
+| stats avg(ms) as avg_ms p95(ms) as p95_ms by stage
+| eval avg_ms=round(avg_ms,1), p95_ms=round(p95_ms,1)
+| sort -avg_ms</query>
         </search>
         <option name="charting.chart">bar</option>
       </chart>
